@@ -6,13 +6,43 @@ const Users = require('./users-model.js');
 router.get('/', restrict, (req, res) => {
     Users.find()
     .then(users => {
-        res.status(200).json(users);
+        let specificUsers = [];
+        if (req.token.department === 'finance') {
+            for (let i=0; i<users.length; i++) {
+                if (users[i].department === 'finance') {
+                    specificUsers.push(users[i]);
+                }
+            }
+        } else if (req.token.department === 'sales') {
+            for (let i=0; i<users.length; i++) {
+                if (users[i].department === 'sales') {
+                    specificUsers.push(users[i])
+                }
+            }
+        }
+        res.status(200).json(specificUsers);
+        // res.status(200).json(users);
     })
     .catch(error => {
         console.log(error);
         res.status(500).json({ errorMessage: 'Failed to retrieve users' });
     })
 });
+
+
+
+// ------------------ Function to check department of user --------------- //
+
+// function checkDepartment(department) {
+//     return function(req, res, next) {
+//         if(req.token && department === req.token.department) {
+//             next();
+//         } else {
+//             res.status(403).json({ message: 'There are no users in your department'})
+//         }
+//     }
+// }
+
 
 
 // ------------------ Custom Middleware --------------------- //
@@ -31,7 +61,7 @@ function restrict(req, res, next) {
             }
         });
     } else {
-        res.status(400).json({ message: 'Please login again' });
+        res.status(400).json({ message: 'Please login and try again' });
     }
 };
 

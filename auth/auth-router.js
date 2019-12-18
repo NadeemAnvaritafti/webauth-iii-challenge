@@ -7,7 +7,7 @@ const router = express.Router();
 const Users = require("../users/users-model");
 
 
-router.post('/register', validate, (req, res) => {
+router.post('/register', validateRegister, (req, res) => {
     let userData = req.body;
     const hash = bcrypt.hashSync(userData.password, 8);
     userData.password = hash;
@@ -23,7 +23,7 @@ router.post('/register', validate, (req, res) => {
 });
 
 
-router.post('/login', validate, (req, res) => {
+router.post('/login', validateLogin, (req, res) => {
     let { username, password } = req.body;
     Users.findBy({ username })
     .then(user => {
@@ -41,21 +41,6 @@ router.post('/login', validate, (req, res) => {
         console.log(error);
         res.status(500).json({ errorMessage: 'Failed to retrieve credentials '});
     })
-});
-
-
-router.get('/logout', (req, res) => {
-    if (req.session) {
-        req.session.destroy(error => {
-            if (error) {
-                res.status(500).json({ message: 'there was an error logging out' })
-            } else {
-                res.status(200).json({ message: 'Successfully logged out!' })
-            }
-        });
-    } else {
-        res.status(200).end();
-    }
 });
 
 
@@ -81,10 +66,25 @@ function signToken(user) {
 
 // ----------------------- CUSTOM MIDDLEWARE ------------------------ //
 
-function validate(req, res, next) {
+function validateRegister(req, res, next) {
     const data = req.body;
     if (!data) {
-        res.status(400).json({ error: 'missing username and password' })
+        res.status(400).json({ error: 'missing username, password and department' })
+    } else if (!data.username) {
+        res.status(400).json({ error: 'missing required username' })
+    } else if (!data.password) {
+        res.status(400).json({ error: 'missing required password' })
+    } else if (!data.department) {
+        res.status(400).json({ error: 'missing required department' })
+    } else {
+        next();
+    }
+}
+
+function validateLogin(req, res, next) {
+    const data = req.body;
+    if (!data) {
+        res.status(400).json({ error: 'missing username, password' })
     } else if (!data.username) {
         res.status(400).json({ error: 'missing required username' })
     } else if (!data.password) {
